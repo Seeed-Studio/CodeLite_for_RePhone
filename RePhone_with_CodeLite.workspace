@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="RePhone_with_CodeLite" Database="">
+  <Project Name="project_lua" Path="project_lua/project_lua.project" Active="No"/>
+  <Project Name="project_js" Path="project_js/project_js.project" Active="No"/>
+  <Project Name="project_blink" Path="project_blink/project_blink.project" Active="Yes"/>
+  <Project Name="project_button" Path="project_button/project_button.project" Active="No"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Project Name="project_lua" ConfigName="Debug"/>
+      <Project Name="project_js" ConfigName="Debug"/>
+      <Project Name="project_blink" ConfigName="Debug"/>
+      <Project Name="project_button" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Project Name="project_lua" ConfigName="Release"/>
+      <Project Name="project_js" ConfigName="Release"/>
+      <Project Name="project_blink" ConfigName="Release"/>
+      <Project Name="project_button" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>
