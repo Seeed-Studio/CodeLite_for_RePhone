@@ -23,6 +23,7 @@ extern void retarget_setup();
 extern int luaopen_audio(lua_State *L);
 extern int luaopen_gsm(lua_State *L);
 extern int luaopen_timer(lua_State *L);
+extern int luaopen_gpio(lua_State *L);
 
 lua_State *L = NULL;
 
@@ -85,6 +86,7 @@ void lua_setup()
     luaopen_audio(L);
     luaopen_gsm(L);
     luaopen_timer(L);
+    luaopen_gpio(L);
 
     lua_register(L, "msleep", msleep_c);
 

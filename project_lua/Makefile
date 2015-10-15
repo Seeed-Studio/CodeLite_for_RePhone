@@ -2,7 +2,7 @@
 WORKSPACE_PATH = ../
 PROJECT = lua
 
-OBJECTS += main.o retarget.o shell.o audio.o gsm.o timer.o
+OBJECTS += main.o retarget.o shell.o audio.o gsm.o timer.o gpio.o
 
 WORKSPACE_PATH = ../
 

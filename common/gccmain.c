@@ -245,6 +245,7 @@ void gcc_entry(unsigned int entry, unsigned int init_array_start, unsigned int c
     }
     vm_main();
 }
+
 #define VM_DCL_PIN_MODE_MAX 10
 
 typedef struct {
@@ -268,11 +269,7 @@ const VM_DCL_PIN_MUX pinTable[VM_DCL_PIN_TABLE_SIZE] = {
     { VM_PIN_D0, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, VM_DCL_PIN_MODE_UART, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_D1, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, VM_DCL_PIN_MODE_UART, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_D2, 20, 0, 0, { VM_DCL_PIN_MODE_GPIO, VM_DCL_PIN_MODE_PWM, VM_DCL_PIN_MODE_EINT, 0, 0, 0, 0, 0, 0, 0 } },
-    { VM_PIN_D3,
-      11,
-      0,
-      VM_DCL_PWM_1,
-      { VM_DCL_PIN_MODE_GPIO, 0, VM_DCL_PIN_MODE_EINT, VM_DCL_PIN_MODE_PWM, 0, 0, 0, 0, 0, 0 } },
+    { VM_PIN_D3, 11, 0, VM_DCL_PWM_1, { VM_DCL_PIN_MODE_GPIO, 0, VM_DCL_PIN_MODE_EINT, VM_DCL_PIN_MODE_PWM, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_D4, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_D5, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_D6, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
@@ -298,11 +295,7 @@ const VM_DCL_PIN_MUX pinTable[VM_DCL_PIN_TABLE_SIZE] = {
 };
 #elif defined(__HDK_LINKIT_ASSIST_2502__)
 static const VM_DCL_PIN_MUX pinTable[VM_DCL_PIN_TABLE_SIZE] = {
-    { VM_PIN_P0,
-      11,
-      0,
-      VM_DCL_PWM_1,
-      { VM_DCL_PIN_MODE_GPIO, 0, VM_DCL_PIN_MODE_EINT, VM_DCL_PIN_MODE_PWM, 0, 0, 0, 0, 0, 0 } },
+    { VM_PIN_P0, 11, 0, VM_DCL_PWM_1, { VM_DCL_PIN_MODE_GPIO, 0, VM_DCL_PIN_MODE_EINT, VM_DCL_PIN_MODE_PWM, 0, 0, 0, 0, 0, 0 } },
     { VM_PIN_P1, 0, 0, VM_DCL_PWM_4, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, VM_DCL_PIN_MODE_PWM, 0, 0, 0, 0, 0 } },
     { VM_PIN_P2, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, VM_DCL_PIN_MODE_SPI, 0, 0, 0, 0, 0 } },
     { VM_PIN_P3, 0, 0, 0, { VM_DCL_PIN_MODE_GPIO, 0, 0, 0, VM_DCL_PIN_MODE_SPI, 0, 0, 0, 0, 0 } },
@@ -389,3 +382,46 @@ VMUINT vm_dcl_pin_to_eint(VMUINT pin)
 
     return 0;
 }
+
+typedef struct {
+    VMINT gpio;
+    VMINT mode;
+    VM_DCL_HANDLE handle; 
+} VM_DCL_PIN_HANDLE;
+
+
+static VM_DCL_PIN_HANDLE pinHandleTable[VM_DCL_PIN_TABLE_SIZE] = {
+    { VM_PIN_P0, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P1, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P2, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P3, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P4, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P5, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P6, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P7, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P8, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P9, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P10, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P11, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P12, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P13, 0, VM_DCL_HANDLE_INVALID },
+    { VM_PIN_P14, 0, VM_DCL_HANDLE_INVALID }
+};
+
+int gpio_get_handle(int pin, VM_DCL_HANDLE *handle)
+{
+    int i;
+    for (i = 0; i < VM_DCL_PIN_TABLE_SIZE; i++) {
+        if (pinHandleTable[i].gpio == pin) {
+            if (pinHandleTable[i].handle == VM_DCL_HANDLE_INVALID) {
+                pinHandleTable[i].handle = vm_dcl_open(VM_DCL_GPIO, pin);
+            }
+            *handle = pinHandleTable[i].handle;
+            
+            return 0;
+        }
+    }
+    
+    return -1;
+}
+

@@ -1,97 +1,120 @@
 
-#include "vmtimer.h"
+#include "vmdcl.h"
+#include "vmdcl_gpio.h"
 
 #include "lua.h"
 #include "lauxlib.h"
 
-#define LUA_TIMER   "timer"
+#define INPUT 0
+#define OUTPUT 1
+#define INPUT_PULLUP 2
+#define HIGH 1
+#define LOW 0
 
-typedef struct {
-    VM_TIMER_ID_PRECISE timer_id;
-    int cb_ref;
-    lua_State *L;
-} timer_info_t;
+extern int gpio_get_handle(int pin, VM_DCL_HANDLE* handle);
 
-static void __timer_callback(VM_TIMER_ID_PRECISE sys_timer_id, void* user_data)
+int gpio_mode(lua_State* L)
 {
-    timer_info_t *p = (timer_info_t *)user_data;
-    lua_State *L = p->L;
+    VM_DCL_HANDLE handle;
+    int pin = luaL_checkinteger(L, 1);
+    int mode = luaL_checkinteger(L, 2);
 
-    lua_rawgeti(L, LUA_REGISTRYINDEX, p->cb_ref);
-    lua_call(L, 0, 0);
-}
-
-int timer_create(lua_State *L)
-{
-    timer_info_t *p;
-    int ref;
-    unsigned interval = luaL_checkinteger(L, 1);
-
-    lua_pushvalue(L, 2);
-
-    ref = luaL_ref(L, LUA_REGISTRYINDEX);
-
-    p = (timer_info_t *)lua_newuserdata(L, sizeof(timer_info_t));
-
-    luaL_getmetatable(L, LUA_TIMER);
-    lua_setmetatable(L, -2);
-
-    p->L = L;
-    p->cb_ref = ref;
-    p->timer_id = vm_timer_create_precise(interval, __timer_callback, p);
-
-    return 1;
-}
-
-int timer_delete(lua_State *L)
-{
-    timer_info_t *p = ((timer_info_t *)luaL_checkudata(L, -1, LUA_TIMER));
-
-    vm_timer_delete_precise(p->timer_id);
+    if (gpio_get_handle(pin, &handle)) {
+        return 0;
+    }
+    
+    vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_MODE_0, NULL);
+    
+    if (mode == INPUT) {
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_IN, NULL);
+    } else if (mode == OUTPUT) {
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_OUT, NULL);
+    } else {
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_IN, NULL);
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_ENABLE_PULL, NULL);
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_SET_PULL_HIGH, NULL);
+    }
 
     return 0;
 }
 
-int timer_gc(lua_State *L)
+int gpio_read(lua_State* L)
 {
-    timer_info_t *p = ((timer_info_t *)luaL_checkudata(L, -1, LUA_TIMER));
+    VM_DCL_HANDLE handle;
+    vm_dcl_gpio_control_level_status_t data;
+    int pin = luaL_checkinteger(L, 1);
+    
+    gpio_get_handle(pin, &handle);
+    vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_READ, &data);
 
-    vm_timer_delete_precise(p->timer_id);
-    return 0;
+    lua_pushnumber(L, data.level_status);
+
+    return 1;
 }
 
-int timer_tostring(lua_State *L)
+int gpio_write(lua_State* L)
 {
-    timer_info_t *p = ((timer_info_t *)luaL_checkudata(L, -1, LUA_TIMER));
-    lua_pushfstring(L, "timer (%p)", p->timer_id);
-    return 1;
+    VM_DCL_HANDLE handle;
+    int pin = luaL_checkinteger(L, 1);
+    int value = luaL_checkinteger(L, 2);
+
+    gpio_get_handle(pin, &handle);
+    if (value) {
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_WRITE_HIGH, NULL);
+    } else {
+        vm_dcl_control(handle, VM_DCL_GPIO_COMMAND_WRITE_LOW, NULL);
+    }
+
+    return 0;
 }
 
 #undef MIN_OPT_LEVEL
 #define MIN_OPT_LEVEL 0
 #include "lrodefs.h"
 
-const LUA_REG_TYPE timer_map[] =
+#define MOD_REG_NUMBER(L, name, value) \
+    lua_pushnumber(L, value);          \
+    lua_setfield(L, -2, name)
+
+#define GLOBAL_NUMBER(l, name, value) \
+    lua_pushnumber(L, value);         \
+    lua_setglobal(L, name)
+
+const LUA_REG_TYPE gpio_map[] = { { LSTRKEY("mode"), LFUNCVAL(gpio_mode) },
+                                  { LSTRKEY("read"), LFUNCVAL(gpio_read) },
+                                  { LSTRKEY("write"), LFUNCVAL(gpio_write) },
+#if LUA_OPTIMIZE_MEMORY > 0
+                                  { LSTRKEY("OUTPUT"), LNUMVAL(OUTPUT) },
+                                  { LSTRKEY("INPUT"), LNUMVAL(INPUT) },
+                                  { LSTRKEY("HIGH"), LNUMVAL(HIGH) },
+                                  { LSTRKEY("LOW"), LNUMVAL(LOW) },
+                                  { LSTRKEY("INPUT_PULLUP"), LNUMVAL(INPUT_PULLUP) },
+#endif
+                                  { LNILKEY, LNILVAL } };
+
+LUALIB_API int luaopen_gpio(lua_State* L)
 {
-    {LSTRKEY("create"), LFUNCVAL(timer_create)},
-    {LSTRKEY("delete"), LFUNCVAL(timer_delete)},
-    {LNILKEY, LNILVAL}
-};
+    lua_register(L, "pinMode", gpio_mode);
+    lua_register(L, "digitalRead", gpio_read);
+    lua_register(L, "digitalWrite", gpio_write);
 
-const LUA_REG_TYPE timer_table[] = {
-  {LSTRKEY("delete"), LFUNCVAL(timer_delete)},
-  {LSTRKEY("__gc"), LFUNCVAL(timer_gc)},
-  {LSTRKEY("__tostring"), LFUNCVAL(timer_tostring)},
-  {LNILKEY, LNILVAL}
-};
+    GLOBAL_NUMBER(L, "OUTPUT", OUTPUT);
+    GLOBAL_NUMBER(L, "INPUT", INPUT);
+    GLOBAL_NUMBER(L, "HIGH", HIGH);
+    GLOBAL_NUMBER(L, "LOW", LOW);
+    GLOBAL_NUMBER(L, "INPUT_PULLUP", INPUT_PULLUP);
 
-LUALIB_API int luaopen_timer(lua_State *L)
-{
-    luaL_newmetatable(L, LUA_TIMER);  /* create metatable for file handles */
-    lua_pushvalue(L, -1);  /* push metatable */
-    lua_setfield(L, -2, "__index");  /* metatable.__index = metatable */
-    luaL_register(L, NULL, timer_table);  /* file methods */
+#if LUA_OPTIMIZE_MEMORY > 0
+    return 0;
+#else  // #if LUA_OPTIMIZE_MEMORY > 0
 
-    luaL_register(L, "timer", timer_map);
+    luaL_register(L, "gpio", gpio_map);
+    // Add constants
+    MOD_REG_NUMBER(L, "OUTPUT", OUTPUT);
+    MOD_REG_NUMBER(L, "INPUT", INPUT);
+    MOD_REG_NUMBER(L, "HIGH", HIGH);
+    MOD_REG_NUMBER(L, "LOW", LOW);
+    MOD_REG_NUMBER(L, "INPUT_PULLUP", INPUT_PULLUP);
     return 1;
+#endif // #if LUA_OPTIMIZE_MEMORY > 0
 }
