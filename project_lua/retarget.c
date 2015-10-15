@@ -66,8 +66,13 @@ void retarget_setup(void)
         return;
     }
 
-    vm_dcl_config_pin_mode(D8, VM_DCL_PIN_MODE_UART);
-    vm_dcl_config_pin_mode(D9, VM_DCL_PIN_MODE_UART);
+#if defined(__HDK_LINKIT_ONE_V1__)
+        vm_dcl_config_pin_mode(VM_PIN_D0, VM_DCL_PIN_MODE_UART);
+        vm_dcl_config_pin_mode(VM_PIN_D1, VM_DCL_PIN_MODE_UART);
+#elif defined(__HDK_LINKIT_ASSIST_2502__)
+        vm_dcl_config_pin_mode(VM_PIN_P8, VM_DCL_PIN_MODE_UART);
+        vm_dcl_config_pin_mode(VM_PIN_P9, VM_DCL_PIN_MODE_UART);
+#endif
 
     g_owner_id = vm_dcl_get_owner_id();
     uart_handle = vm_dcl_open(VM_DCL_SIO_UART_PORT1, g_owner_id);

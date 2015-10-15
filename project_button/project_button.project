@@ -85,7 +85,7 @@
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="" IntermediateDirectory="./Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="" IntermediateDirectory="./Debug" Command="$(WorkspacePath)/tools/make flash" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(ProjectPath)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -97,9 +97,9 @@
       <PreBuild/>
       <PostBuild/>
       <CustomBuild Enabled="yes">
-        <RebuildCommand>make clean all -j4</RebuildCommand>
-        <CleanCommand>make clean</CleanCommand>
-        <BuildCommand>make -j4</BuildCommand>
+        <RebuildCommand>$(WorkspacePath)/tools/make clean all -j4</RebuildCommand>
+        <CleanCommand>$(WorkspacePath)/tools/make clean</CleanCommand>
+        <BuildCommand>$(WorkspacePath)/tools/make -j4</BuildCommand>
         <PreprocessFileCommand/>
         <SingleFileCommand/>
         <MakefileGenerationCommand/>

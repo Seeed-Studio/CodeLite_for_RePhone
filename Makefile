@@ -19,7 +19,7 @@ OBJCOPY = $(GCC_BIN)arm-none-eabi-objcopy
 OBJDUMP = $(GCC_BIN)arm-none-eabi-objdump
 SIZE    = $(GCC_BIN)arm-none-eabi-size
 PACK    = $(WORKSPACE_PATH)tools/PackTag
-PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushTool
+PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell
 
 CPU = -mcpu=arm7tdmi-s -mthumb -mlittle-endian
 CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -O2
@@ -66,4 +66,6 @@ size: $(PROJECT).elf
 	$(SIZE) $(PROJECT).elf
 
 flash: $(PROJECT).vxp
-	$(PUSH) -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT).vxp
+	$(PUSH) $(PROJECT_PATH)/$(PROJECT).vxp
+
+	#$(PUSH) -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT_PATH)/$(PROJECT).vxp
