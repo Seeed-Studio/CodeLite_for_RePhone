@@ -24,6 +24,8 @@ extern int luaopen_audio(lua_State *L);
 extern int luaopen_gsm(lua_State *L);
 extern int luaopen_timer(lua_State *L);
 extern int luaopen_gpio(lua_State *L);
+extern int luaopen_screen(lua_State *L);
+extern int luaopen_i2c(lua_State *L);
 
 lua_State *L = NULL;
 
@@ -87,6 +89,8 @@ void lua_setup()
     luaopen_gsm(L);
     luaopen_timer(L);
     luaopen_gpio(L);
+    luaopen_screen(L);
+    luaopen_i2c(L);
 
     lua_register(L, "msleep", msleep_c);
 
@@ -132,8 +136,6 @@ void vm_main(void)
 
     retarget_setup();
     fputs("hello, linkit assist\n", stdout);
-
-
 
     key_init();
     vm_keypad_register_event_callback(handle_keypad_event);

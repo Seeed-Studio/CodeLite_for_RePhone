@@ -60,11 +60,15 @@ void retarget_setup(void)
 {
     VM_DCL_HANDLE uart_handle;
     vm_dcl_sio_control_dcb_t settings;
+    
+    g_owner_id = vm_dcl_get_owner_id();
 
     if (retarget_device_handle != -1)
     {
         return;
     }
+    
+#if 0
 
 #if defined(__HDK_LINKIT_ONE_V1__)
         vm_dcl_config_pin_mode(VM_PIN_D0, VM_DCL_PIN_MODE_UART);
@@ -74,8 +78,11 @@ void retarget_setup(void)
         vm_dcl_config_pin_mode(VM_PIN_P9, VM_DCL_PIN_MODE_UART);
 #endif
 
-    g_owner_id = vm_dcl_get_owner_id();
     uart_handle = vm_dcl_open(VM_DCL_SIO_UART_PORT1, g_owner_id);
+#else
+    uart_handle = vm_dcl_open(VM_DCL_SIO_USB_PORT1, g_owner_id);
+#endif
+    
     settings.owner_id = g_owner_id;
     settings.config.dsr_check = 0;
     settings.config.data_bits_per_char_length = VM_DCL_SIO_UART_BITS_PER_CHAR_LENGTH_8;

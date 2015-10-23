@@ -4,6 +4,12 @@
   <Dependencies/>
   <VirtualDirectory Name="common">
     <File Name="../common/gccmain.c"/>
+    <File Name="../common/lcd_sitronix_st7789s.c"/>
+    <File Name="../common/lcd_sitronix_st7789s.h"/>
+    <File Name="../common/tp_goodix_gt9xx.c"/>
+    <File Name="../common/tp_goodix_gt9xx.h"/>
+    <File Name="../common/tp_i2c.c"/>
+    <File Name="../common/tp_i2c.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="lua">
     <File Name="../lua/lapi.c"/>
@@ -138,9 +144,10 @@
     <File Name="shell.c"/>
     <File Name="shell.h"/>
     <File Name="timer.c"/>
+    <File Name="i2c.c"/>
+    <File Name="net.c"/>
+    <File Name="screen.c"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -228,4 +235,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
