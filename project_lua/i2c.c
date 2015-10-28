@@ -176,59 +176,72 @@ static int i2c_recv(lua_State* L)
     return 1;
 }
 
-// Lua: read = i2c.read(addr, size)
-static int i2c_read(lua_State* L)
+// Lua: read = i2c.txrx(addr, size)
+static int i2c_txrx(lua_State* L)
 {
     const char* pdata;
     size_t datalen;
     int numdata;
+    int argn;
     int i;
     luaL_Buffer b;
     vm_dcl_i2c_control_write_and_read_t param;
-    VM_DCL_STATUS status;
     char wbuf[8];
     char rbuf[8];
-    size_t size = luaL_checkinteger(L, 2);
+    int wbuf_index = 0;
+    size_t size = luaL_checkinteger(L, -1);
+    int top = lua_gettop(L);
 
     if(size <= 0) {
         return 0;
     } else if(size > 8) {
         return luaL_error(L, "read data length must not exceed 8");
     }
-
-    if(lua_type(L, 1) == LUA_TNUMBER) {
-        numdata = (int)luaL_checkinteger(L, 1);
-        if(numdata < 0 || numdata > 255)
-            return luaL_error(L, "numeric data must be from 0 to 255");
-
-        wbuf[0] = numdata;
-        param.out_data_length = 1;
-    } else if(lua_istable(L, 1)) {
-        datalen = lua_objlen(L, 1);
-        if(datalen > 8)
-            return luaL_error(L, "write data length must not exceed 8");
-        for(i = 0; i < datalen; i++) {
-            lua_rawgeti(L, 1, i + 1);
-            numdata = (int)luaL_checkinteger(L, -1);
-            lua_pop(L, 1);
+    
+    if(lua_gettop(L) < 2)
+        return luaL_error(L, "invalid number of arguments");
+    for(argn = 1; argn < top; argn++) {
+        // lua_isnumber() would silently convert a string of digits to an integer
+        // whereas here strings are handled separately.
+        if(lua_type(L, argn) == LUA_TNUMBER) {
+            numdata = (int)luaL_checkinteger(L, argn);
             if(numdata < 0 || numdata > 255)
                 return luaL_error(L, "numeric data must be from 0 to 255");
 
-            wbuf[i] = numdata;
-        }
+            if(wbuf_index > 8) {
+                return luaL_error(L, "write data length must not exceed 8");
+            }
+            wbuf[wbuf_index] = numdata;
+            wbuf_index++;
+            
+        } else if(lua_istable(L, argn)) {
+            datalen = lua_objlen(L, argn);
+            for(i = 0; i < datalen; i++) {
+                lua_rawgeti(L, argn, i + 1);
+                numdata = (int)luaL_checkinteger(L, -1);
+                lua_pop(L, 1);
+                if(numdata < 0 || numdata > 255)
+                    return luaL_error(L, "numeric data must be from 0 to 255");
 
-        param.out_data_length = datalen;
-    } else {
-        pdata = luaL_checklstring(L, 1, &datalen);
-        if(datalen > 8)
-            return luaL_error(L, "write data length must not exceed 8");
-        for(i = 0; i < datalen; i++) {
-            wbuf[i] = pdata[i];
+                if(wbuf_index > 8) {
+                    return luaL_error(L, "write data length must not exceed 8");
+                }
+                wbuf[wbuf_index] = numdata;
+                wbuf_index++;
+            }
+        } else {
+            pdata = luaL_checklstring(L, argn, &datalen);
+            for(i = 0; i < datalen; i++) {
+                if(wbuf_index > 8) {
+                    return luaL_error(L, "write data length must not exceed 8");
+                }
+                wbuf[wbuf_index] = numdata;
+                wbuf_index++;
+            }
         }
-
-        param.out_data_length = datalen;
     }
 
+    param.out_data_length = wbuf_index;
     param.out_data_ptr = wbuf;
     param.in_data_length = size;
     param.in_data_ptr = rbuf;
@@ -252,7 +265,7 @@ static int i2c_read(lua_State* L)
 const LUA_REG_TYPE i2c_map[] = { { LSTRKEY("setup"), LFUNCVAL(i2c_setup) },
                                  { LSTRKEY("send"), LFUNCVAL(i2c_send) },
                                  { LSTRKEY("recv"), LFUNCVAL(i2c_recv) },
-                                 { LSTRKEY("read"), LFUNCVAL(i2c_read) },
+                                 { LSTRKEY("txrx"), LFUNCVAL(i2c_txrx) },
                                  { LNILKEY, LNILVAL } };
 
 LUALIB_API int luaopen_i2c(lua_State* L)

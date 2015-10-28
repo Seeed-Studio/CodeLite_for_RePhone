@@ -26,6 +26,8 @@ extern int luaopen_timer(lua_State *L);
 extern int luaopen_gpio(lua_State *L);
 extern int luaopen_screen(lua_State *L);
 extern int luaopen_i2c(lua_State *L);
+extern int luaopen_tcp(lua_State* L);
+extern int luaopen_https(lua_State* L);
 
 lua_State *L = NULL;
 
@@ -91,6 +93,8 @@ void lua_setup()
     luaopen_gpio(L);
     luaopen_screen(L);
     luaopen_i2c(L);
+    luaopen_tcp(L);
+    luaopen_https(L);
 
     lua_register(L, "msleep", msleep_c);
 

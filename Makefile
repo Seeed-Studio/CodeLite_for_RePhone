@@ -4,8 +4,9 @@ WORKSPACE_PATH ?= ../
 LINKIT_ASSIST_SDK_PATH ?= $(WORKSPACE_PATH)LINKIT_ASSIST_SDK/
 GCC_BIN ?= $(LINKIT_ASSIST_SDK_PATH)tools/gcc-arm-none-eabi-4_9-2014q4-20141203-win32/bin/
 
+OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
-INCLUDE_PATHS += -I. -I$(LINKIT_ASSIST_SDK_PATH)include
+INCLUDE_PATHS += -I. -I$(LINKIT_ASSIST_SDK_PATH)include -I$(WORKSPACE_PATH)common
 LIBRARY_PATHS += -L$(LINKIT_ASSIST_SDK_PATH)lib
 LIBRARIES += $(LINKIT_ASSIST_SDK_PATH)lib/LINKIT10/armgcc/percommon.a -lm
 LINKER_SCRIPT = $(LINKIT_ASSIST_SDK_PATH)lib/LINKIT10/armgcc/scat.ld
@@ -20,6 +21,7 @@ OBJDUMP = $(GCC_BIN)arm-none-eabi-objdump
 SIZE    = $(GCC_BIN)arm-none-eabi-size
 PACK    = $(WORKSPACE_PATH)tools/PackTag
 PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell
+#PUSH    = $(WORKSPACE_PATH)tools/PushTool
 
 CPU = -mcpu=arm7tdmi-s -mthumb -mlittle-endian
 CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -O2
@@ -67,5 +69,4 @@ size: $(PROJECT).elf
 
 flash: $(PROJECT).vxp
 	$(PUSH) $(PROJECT_PATH)/$(PROJECT).vxp
-
-	#$(PUSH) -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT_PATH)/$(PROJECT).vxp
+	#$(PUSH) -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT).vxp
