@@ -2,7 +2,10 @@
 
 WORKSPACE_PATH ?= ../
 LINKIT_ASSIST_SDK_PATH ?= $(WORKSPACE_PATH)LINKIT_ASSIST_SDK/
-GCC_BIN ?= $(LINKIT_ASSIST_SDK_PATH)tools/gcc-arm-none-eabi-4_9-2014q4-20141203-win32/bin/
+
+ifeq ($(OS),Windows_NT)
+	GCC_BIN ?= $(LINKIT_ASSIST_SDK_PATH)tools/gcc-arm-none-eabi-4_9-2014q4-20141203-win32/bin/
+endif
 
 OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
@@ -19,9 +22,22 @@ LD      = $(GCC_BIN)arm-none-eabi-gcc
 OBJCOPY = $(GCC_BIN)arm-none-eabi-objcopy
 OBJDUMP = $(GCC_BIN)arm-none-eabi-objdump
 SIZE    = $(GCC_BIN)arm-none-eabi-size
-PACK    = $(WORKSPACE_PATH)tools/PackTag
-PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell
-#PUSH    = $(WORKSPACE_PATH)tools/PushTool
+
+ifeq ($(OS),Windows_NT)
+	PACK    = $(WORKSPACE_PATH)tools/PackTag.exe
+	PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell.exe
+	#PUSH    = $(WORKSPACE_PATH)tools/PushTool.exe -v -v -v -v -t arduino -clear -port $(PORT) -app
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		PACK    = python $(WORKSPACE_PATH)tools/packtag.py
+		PUSH    = @echo use
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		PACK    = $(WORKSPACE_PATH)tools/PackTag
+		PUSH    = $(WORKSPACE_PATH)tools/PushTool -v -v -v -v -d arduino  -b $(PORT) -p
+	endif
+endif
 
 CPU = -mcpu=arm7tdmi-s -mthumb -mlittle-endian
 CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -O2
@@ -31,7 +47,7 @@ LD_FLAGS = $(CPU) -O2 -Wl,--gc-sections --specs=nosys.specs -fpic -pie -Wl,-Map=
 LD_SYS_LIBS =
 
 
-all: $(PROJECT).elf size
+all: $(PROJECT).vxp size
 
 clean:
 	rm -f $(PROJECT).vxp $(PROJECT).bin $(PROJECT).elf $(PROJECT).hex $(PROJECT).map $(PROJECT).lst $(OBJECTS)
@@ -69,4 +85,3 @@ size: $(PROJECT).elf
 
 flash: $(PROJECT).vxp
 	$(PUSH) $(PROJECT_PATH)/$(PROJECT).vxp
-	#$(PUSH) -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT).vxp
