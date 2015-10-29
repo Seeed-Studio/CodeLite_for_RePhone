@@ -12,6 +12,8 @@
 
 #include "v7.h"
 
+struct v7* v7;
+
 VM_TIMER_ID_PRECISE sys_timer_id = 0;
 
 long timezone = 0;
@@ -68,16 +70,18 @@ void handle_sysevt(VMINT message, VMINT param)
 void vm_main(void)
 {
 
+    v7 = v7_create();
     retarget_setup();
+    
+    sj_prompt_init(v7);
+    
     fputs("hello, linkit assist\n", stdout);
 
     if(1) {
         const char* js_code = "print('js & rephone - balabala')";
         v7_val_t exec_result;
-        struct v7* v7 = v7_create();
         v7_exec_file(v7, "init.js", &exec_result);
         v7_exec(v7, js_code, &exec_result);
-        v7_destroy(v7);
     }
 
     key_init();

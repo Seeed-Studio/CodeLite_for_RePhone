@@ -5,16 +5,13 @@
 #include "vmboard.h"
 #include "vmthread.h"
 #include "vmlog.h"
+#include "sj_prompt.h"
 
 #define SERIAL_BUFFER_SIZE      64
 
 /* Module owner of APP */
 static VM_DCL_OWNER_ID g_owner_id = 0;
 static VM_DCL_HANDLE retarget_device_handle = -1;
-VM_SIGNAL_ID retarget_rx_signal_id;
-static char retarget_rx_buffer[SERIAL_BUFFER_SIZE];
-unsigned retarget_rx_buffer_head = 0;
-unsigned retarget_rx_buffer_tail = 0;
 
 void __retarget_irq_handler(void* parameter, VM_DCL_EVENT event, VM_DCL_HANDLE device_handle)
 {
@@ -36,17 +33,9 @@ void __retarget_irq_handler(void* parameter, VM_DCL_EVENT event, VM_DCL_HANDLE d
         }
         else if (returned_len)
         {
-            if (retarget_rx_buffer_head == retarget_rx_buffer_tail) {
-                vm_signal_post(retarget_rx_signal_id);
-            }
-
             for (i = 0; i < returned_len; i++)
             {
-                retarget_rx_buffer[retarget_rx_buffer_head % SERIAL_BUFFER_SIZE] = data[i];
-                retarget_rx_buffer_head++;
-                if ((unsigned)(retarget_rx_buffer_head - retarget_rx_buffer_tail) > SERIAL_BUFFER_SIZE) {
-                    retarget_rx_buffer_tail = retarget_rx_buffer_head - SERIAL_BUFFER_SIZE;
-                }
+                sj_prompt_process_char(data[i]);
             }
         }
 
@@ -61,21 +50,21 @@ void retarget_setup(void)
     VM_DCL_HANDLE uart_handle;
     vm_dcl_sio_control_dcb_t settings;
 
+    
+    g_owner_id = vm_dcl_get_owner_id();
+
     if (retarget_device_handle != -1)
     {
         return;
     }
-
-#if defined(__HDK_LINKIT_ONE_V1__)
-        vm_dcl_config_pin_mode(VM_PIN_D0, VM_DCL_PIN_MODE_UART);
-        vm_dcl_config_pin_mode(VM_PIN_D1, VM_DCL_PIN_MODE_UART);
-#elif defined(__HDK_LINKIT_ASSIST_2502__)
-        vm_dcl_config_pin_mode(VM_PIN_P8, VM_DCL_PIN_MODE_UART);
-        vm_dcl_config_pin_mode(VM_PIN_P9, VM_DCL_PIN_MODE_UART);
-#endif
-
-    g_owner_id = vm_dcl_get_owner_id();
+    
+#if 0
+    vm_dcl_config_pin_mode(10, VM_DCL_PIN_MODE_UART);
+    vm_dcl_config_pin_mode(11, VM_DCL_PIN_MODE_UART);
     uart_handle = vm_dcl_open(VM_DCL_SIO_UART_PORT1, g_owner_id);
+#else
+    uart_handle = vm_dcl_open(VM_DCL_SIO_USB_PORT1, g_owner_id);
+#endif
     settings.owner_id = g_owner_id;
     settings.config.dsr_check = 0;
     settings.config.data_bits_per_char_length = VM_DCL_SIO_UART_BITS_PER_CHAR_LENGTH_8;
@@ -86,8 +75,6 @@ void retarget_setup(void)
     settings.config.sw_xoff_char = 0x13;
     settings.config.sw_xon_char = 0x11;
     vm_dcl_control(uart_handle, VM_DCL_SIO_COMMAND_SET_DCB_CONFIG, (void *)&settings);
-
-    retarget_rx_signal_id = vm_signal_create();
 
     vm_dcl_register_callback(uart_handle,
                              VM_DCL_SIO_UART_READY_TO_READ,
@@ -113,15 +100,5 @@ void retarget_puts(const char *str)
 
 int retarget_getc(void)
 {
-    char ch;
-    if (retarget_rx_buffer_head == retarget_rx_buffer_tail)
-    {
-        vm_signal_wait(retarget_rx_signal_id);
-    }
-
-
-    ch = retarget_rx_buffer[retarget_rx_buffer_tail % SERIAL_BUFFER_SIZE];
-    retarget_rx_buffer_tail++;
-
-    return ch;
+    return -1;
 }

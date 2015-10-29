@@ -8,6 +8,8 @@
   <VirtualDirectory Name="project_js">
     <File Name="main.c"/>
     <File Name="retarget.c"/>
+    <File Name="sj_prompt.c"/>
+    <File Name="sj_prompt.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="v7">
     <File Name="../v7/v7.c"/>
@@ -74,8 +76,6 @@
     <File Name="../LINKIT_ASSIST_SDK/include/vmwdt.h"/>
     <File Name="../LINKIT_ASSIST_SDK/include/vmwlan.h"/>
   </VirtualDirectory>
-  <Dependencies Name="Debug"/>
-  <Dependencies Name="Release"/>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -163,4 +163,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
