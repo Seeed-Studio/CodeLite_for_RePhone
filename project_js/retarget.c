@@ -58,7 +58,7 @@ void retarget_setup(void)
         return;
     }
     
-#if 0
+#if 1
     vm_dcl_config_pin_mode(10, VM_DCL_PIN_MODE_UART);
     vm_dcl_config_pin_mode(11, VM_DCL_PIN_MODE_UART);
     uart_handle = vm_dcl_open(VM_DCL_SIO_UART_PORT1, g_owner_id);

@@ -25,8 +25,8 @@ SIZE    = $(GCC_BIN)arm-none-eabi-size
 
 ifeq ($(OS),Windows_NT)
 	PACK    = $(WORKSPACE_PATH)tools/PackTag.exe
-	PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell.exe
-	#PUSH    = $(WORKSPACE_PATH)tools/PushTool.exe -v -v -v -v -t arduino -clear -port $(PORT) -app
+	#PUSH    = $(LINKIT_ASSIST_SDK_PATH)tools/PushCmdShell.exe $(PROJECT_PATH)/$(PROJECT).vxp
+	PUSH    = $(WORKSPACE_PATH)tools/PushTool.exe -v -v -v -v -t arduino -clear -port $(PORT) -app $(PROJECT).vxp
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
@@ -35,13 +35,13 @@ else
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		PACK    = $(WORKSPACE_PATH)tools/PackTag
-		PUSH    = $(WORKSPACE_PATH)tools/PushTool -v -v -v -v -d arduino  -b $(PORT) -p
+		PUSH    = $(WORKSPACE_PATH)tools/PushTool -v -v -v -v -d arduino  -b $(PORT) -p $(PROJECT).vxp
 	endif
 endif
 
 CPU = -mcpu=arm7tdmi-s -mthumb -mlittle-endian
 CC_FLAGS = $(CPU) -c -fvisibility=hidden -fpic -O2
-CC_SYMBOLS = -D__HDK_LINKIT_ASSIST_2502__ -D__COMPILER_GCC__
+CC_SYMBOLS += -D__HDK_LINKIT_ASSIST_2502__ -D__COMPILER_GCC__
 
 LD_FLAGS = $(CPU) -O2 -Wl,--gc-sections --specs=nosys.specs -fpic -pie -Wl,-Map=$(PROJECT).map  -Wl,--entry=gcc_entry -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-unresolved-symbols
 LD_SYS_LIBS =
@@ -84,4 +84,4 @@ size: $(PROJECT).elf
 	$(SIZE) $(PROJECT).elf
 
 flash: $(PROJECT).vxp
-	$(PUSH) $(PROJECT_PATH)/$(PROJECT).vxp
+	$(PUSH)

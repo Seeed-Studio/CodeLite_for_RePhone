@@ -19,6 +19,9 @@ VM_TIMER_ID_PRECISE sys_timer_id = 0;
 long timezone = 0;
 
 extern void retarget_setup();
+extern void js_init_gpio(struct v7 *v7);
+extern void js_init_audio(struct v7 *v7);
+extern void js_init_gsm(struct v7 *v7);
 
 void key_init(void)
 {
@@ -73,16 +76,21 @@ void vm_main(void)
     v7 = v7_create();
     retarget_setup();
     
-    sj_prompt_init(v7);
+    js_init_gpio(v7);
+    js_init_audio(v7);
+    js_init_gsm(v7);
     
-    fputs("hello, linkit assist\n", stdout);
-
-    if(1) {
-        const char* js_code = "print('js & rephone - balabala')";
+    {
+        const char* js_code = "print('js & rephone')";
         v7_val_t exec_result;
         v7_exec_file(v7, "init.js", &exec_result);
         v7_exec(v7, js_code, &exec_result);
     }
+    
+    sj_prompt_init(v7);
+    
+    fputs("hello, linkit assist\n", stdout);
+
 
     key_init();
     vm_keypad_register_event_callback(handle_keypad_event);

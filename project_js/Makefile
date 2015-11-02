@@ -1,8 +1,9 @@
 
 PROJECT = js
 
-OBJECTS += main.o retarget.o ../v7/v7.o sj_prompt.o
-INCLUDE_PATHS += -I../v7
+OBJECTS += main.o retarget.o v7.o sj_prompt.o gpio.o audio.o gsm.o
+INCLUDE_PATHS += -I.
+CC_SYMBOLS += -DNO_BSD_SOCKETS
 
 WORKSPACE_PATH = ../
 
