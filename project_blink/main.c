@@ -10,7 +10,7 @@ VM_TIMER_ID_PRECISE sys_timer_id = 0;
 
 void gpio_init(void)
 {
-    gpio_handle = vm_dcl_open(VM_DCL_GPIO, 10);
+    gpio_handle = vm_dcl_open(VM_DCL_GPIO, 12);     // blue
     vm_dcl_control(gpio_handle, VM_DCL_GPIO_COMMAND_SET_MODE_0, NULL);
     vm_dcl_control(gpio_handle, VM_DCL_GPIO_COMMAND_SET_DIRECTION_OUT, NULL);
 }
