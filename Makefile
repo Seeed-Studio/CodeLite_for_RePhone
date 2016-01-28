@@ -9,10 +9,10 @@ endif
 
 OBJECTS += $(WORKSPACE_PATH)common/lcd_sitronix_st7789s.o $(WORKSPACE_PATH)common/tp_goodix_gt9xx.o $(WORKSPACE_PATH)common/tp_i2c.o
 SYS_OBJECTS += $(WORKSPACE_PATH)common/gccmain.o
-INCLUDE_PATHS += -I. -I$(LINKIT_ASSIST_SDK_PATH)include -I$(WORKSPACE_PATH)common
-LIBRARY_PATHS += -L$(LINKIT_ASSIST_SDK_PATH)lib
-LIBRARIES += $(LINKIT_ASSIST_SDK_PATH)lib/LINKIT10/armgcc/percommon.a -lm
-LINKER_SCRIPT = $(LINKIT_ASSIST_SDK_PATH)lib/LINKIT10/armgcc/scat.ld
+INCLUDE_PATHS += -I. -I$(WORKSPACE_PATH)include -I$(WORKSPACE_PATH)common
+LIBRARY_PATHS += -L$(WORKSPACE_PATH)lib
+LIBRARIES += $(WORKSPACE_PATH)lib/LINKIT10/armgcc/percommon.a -lm
+LINKER_SCRIPT = $(WORKSPACE_PATH)lib/LINKIT10/armgcc/scat.ld
 
 ###############################################################################
 AS      = $(GCC_BIN)arm-none-eabi-as
@@ -31,11 +31,11 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		PACK    = python $(WORKSPACE_PATH)tools/packtag.py
-		PUSH    = @echo use
+		PUSH    = @echo "set RePhone into storage mode, put $(PROJECT).vxp into MRE directory and replace vxp file name with $(PROJECT).vxp"
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		PACK    = $(WORKSPACE_PATH)tools/PackTag
-		PUSH    = $(WORKSPACE_PATH)tools/PushTool -v -v -v -v -d arduino  -b $(PORT) -p $(PROJECT).vxp
+		PACK    = python $(WORKSPACE_PATH)tools/packtag.py
+		PUSH    = @echo "set RePhone into storage mode, put $(PROJECT).vxp into MRE directory and replace vxp file name with $(PROJECT).vxp"
 	endif
 endif
 
