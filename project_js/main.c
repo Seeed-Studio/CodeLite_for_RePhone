@@ -72,6 +72,7 @@ void handle_sysevt(VMINT message, VMINT param)
 /* Entry point */
 void vm_main(void)
 {
+    v7_val_t exec_result;
 
     v7 = v7_create();
     retarget_setup();
@@ -80,16 +81,10 @@ void vm_main(void)
     js_init_audio(v7);
     js_init_gsm(v7);
     
-    {
-        const char* js_code = "print('js & rephone')";
-        v7_val_t exec_result;
-        v7_exec_file(v7, "init.js", &exec_result);
-        v7_exec(v7, js_code, &exec_result);
-    }
+    v7_exec_file(v7, "init.js", &exec_result);
     
     sj_prompt_init(v7);
-    
-    fputs("hello, linkit assist\n", stdout);
+
 
 
     key_init();

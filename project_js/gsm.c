@@ -10,8 +10,8 @@
 
 #include "v7.h"
 
-#define INCOMING_CALL_CB    "incoming_call_cb"
-#define NEW_MESSAGE_CB      "new_message_cb"
+#define INCOMING_CALL_CB "incoming_call_cb"
+#define NEW_MESSAGE_CB "new_message_cb"
 
 extern struct v7* v7;
 
@@ -37,19 +37,20 @@ void call_listener_func(vm_gsm_tel_call_listener_data_t* data)
 
         vm_log_info("incoming call");
 
-        // to-do: js callback
         {
             v7_val_t cb = v7_get(v7, v7_get_global(v7), INCOMING_CALL_CB, sizeof(INCOMING_CALL_CB) - 1);
 
-              if (v7_is_function(cb)) {
-                  v7_val_t res;
-                  v7_val_t number = v7_create_string(v7, g_incoming_number, strlen(g_incoming_number), 1);
+            if(v7_is_function(cb)) {
+                v7_val_t res;
+                v7_val_t args = v7_create_array(v7);
+                v7_val_t number = v7_create_string(v7, g_incoming_number, strlen(g_incoming_number), 1);
 
-                  if (v7_apply(v7, &res, cb, v7_create_undefined(), number) != V7_OK) {
+                v7_array_push(v7, args, number);
+                if(v7_apply(v7, &res, cb, v7_create_undefined(), args) != V7_OK) {
                     /* TODO(mkm): make it print stack trace */
                     fprintf(stderr, "cb threw an exception\n");
-                  }
-              }
+                }
+            }
         }
 
     }
@@ -199,13 +200,13 @@ static v7_val_t gsm_hang(struct v7* v7)
 
 static v7_val_t gsm_on_incoming_call(struct v7* v7)
 {
-     v7_val_t cb = v7_arg(v7, 0);
-     if (!v7_is_function(cb)) {
+    v7_val_t cb = v7_arg(v7, 0);
+    if(!v7_is_function(cb)) {
         return v7_create_boolean(0);
-     };
+    };
 
-     v7_set(v7, v7_get_global(v7), INCOMING_CALL_CB, sizeof(INCOMING_CALL_CB) - 1, 0, cb);
-     
+    v7_set(v7, v7_get_global(v7), INCOMING_CALL_CB, sizeof(INCOMING_CALL_CB) - 1, 0, cb);
+
     return v7_create_boolean(1);
 }
 
@@ -256,7 +257,23 @@ int _gsm_on_new_message(vm_gsm_sms_event_t* event_data)
         /* Converts the message content to ASCII. */
         vm_chset_ucs2_to_ascii((VMSTR)content, 100, (VMWSTR)event_new_message_ptr->content);
 
-        // to-do: new message callback for js
+        {
+            v7_val_t cb = v7_get(v7, v7_get_global(v7), NEW_MESSAGE_CB, sizeof(NEW_MESSAGE_CB) - 1);
+
+            if(v7_is_function(cb)) {
+                v7_val_t res;
+                v7_val_t args = v7_create_array(v7);
+                v7_val_t number = v7_create_string(v7, new_message_ptr->number, strlen(new_message_ptr->number), 1);
+                v7_val_t message = v7_create_string(v7, content, strlen(content), 1);
+                
+                v7_array_push(v7, args, number);
+                v7_array_push(v7, args, message);
+                if(v7_apply(v7, &res, cb, v7_create_undefined(), args) != V7_OK) {
+                    /* TODO(mkm): make it print stack trace */
+                    fprintf(stderr, "cb threw an exception\n");
+                }
+            }
+        }
         return 1;
     } else {
         return 0;
@@ -265,13 +282,22 @@ int _gsm_on_new_message(vm_gsm_sms_event_t* event_data)
 
 static v7_val_t gsm_on_new_message(struct v7* v7)
 {
-    return v7_create_undefined();
+    v7_val_t cb = v7_arg(v7, 0);
+    if(!v7_is_function(cb)) {
+        return v7_create_boolean(0);
+    };
+
+    v7_set(v7, v7_get_global(v7), NEW_MESSAGE_CB, sizeof(NEW_MESSAGE_CB) - 1, 0, cb);
+    
+    vm_gsm_sms_set_interrupt_event_handler(VM_GSM_SMS_EVENT_ID_SMS_NEW_MESSAGE, _gsm_on_new_message, NULL);
+
+    return v7_create_boolean(1);
 }
 
 void js_init_gsm(struct v7* v7)
 {
     vm_gsm_tel_call_reg_listener(call_listener_func);
-    
+
     v7_val_t gsm = v7_create_object(v7);
     v7_set(v7, v7_get_global(v7), "gsm", 3, 0, gsm);
     v7_set_method(v7, gsm, "call", gsm_call);
